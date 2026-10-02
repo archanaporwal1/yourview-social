@@ -57,11 +57,6 @@ export default function GuestTestPage() {
           error.code
         );
 
-        console.error(
-          "STATUS:",
-          error.status
-        );
-
         setResult(
           [
             "FAILED",
@@ -70,7 +65,6 @@ export default function GuestTestPage() {
             `Details: ${error.details || "none"}`,
             `Hint: ${error.hint || "none"}`,
             `Code: ${error.code || "none"}`,
-            `Status: ${error.status || "none"}`,
           ].join("\n")
         );
 

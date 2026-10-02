@@ -2,6 +2,7 @@
 
 import {
   FormEvent,
+  Suspense,
   useEffect,
   useMemo,
   useState,
@@ -47,7 +48,7 @@ type TabType =
   | "reposts"
   | "likes";
 
-export default function ProfilePage() {
+function ProfileContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -532,10 +533,6 @@ export default function ProfilePage() {
         );
       }
 
-      /*
-       * Refresh profile so the new reply
-       * appears in the correct activity tab.
-       */
       await reloadProfile();
     } catch (err) {
       setError(
@@ -754,14 +751,6 @@ export default function ProfilePage() {
       return;
     }
 
-    if (profile.is_guest) {
-      router.push(
-        "/messages?to=" +
-          encodeURIComponent(profile.id)
-      );
-      return;
-    }
-
     router.push(
       "/messages?to=" +
         encodeURIComponent(profile.id)
@@ -789,9 +778,7 @@ export default function ProfilePage() {
           encodeURIComponent(profile.id));
 
     try {
-      if (
-        navigator.share
-      ) {
+      if (navigator.share) {
         await navigator.share({
           title:
             displayName() +
@@ -824,11 +811,6 @@ export default function ProfilePage() {
 
   /*
    * Start editing profile.
-   *
-   * The UI is prepared here. Saving will be
-   * connected to the profile PATCH API next,
-   * without changing the existing profile
-   * display or activity functionality.
    */
   function openEditProfile() {
     if (!profile) {
@@ -980,7 +962,6 @@ export default function ProfilePage() {
       active="profile"
     >
       <section className="feed profile-feed">
-        {/* Header */}
         <div className="feed-header profile-header">
           <button
             className="icon-button"
@@ -1006,7 +987,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Profile top */}
         <div className="profile-cover">
           <div className="profile-avatar">
             {displayName()
@@ -1016,7 +996,6 @@ export default function ProfilePage() {
         </div>
 
         <div className="profile-information">
-          {/* Actions */}
           <div className="profile-actions">
             {isOwnProfile ? (
               <>
@@ -1088,7 +1067,6 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* Name */}
           <div className="profile-name-row">
             <h1>
               {displayName()}
@@ -1105,19 +1083,16 @@ export default function ProfilePage() {
               )}
           </div>
 
-          {/* Username */}
           <div className="profile-username">
             @{username()}
           </div>
 
-          {/* Bio */}
           {profile.bio && (
             <div className="profile-bio">
               {profile.bio}
             </div>
           )}
 
-          {/* Details */}
           <div className="profile-details">
             {location && (
               <span className="profile-detail">
@@ -1143,7 +1118,6 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* Stats */}
           <div className="profile-stats">
             <button
               type="button"
@@ -1183,7 +1157,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="profile-tabs">
           <button
             className={
@@ -1238,21 +1211,18 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        {/* Share confirmation */}
         {shareMessage && (
           <div className="share-message">
             {shareMessage}
           </div>
         )}
 
-        {/* Error */}
         {error && (
           <div className="error-banner">
             {error}
           </div>
         )}
 
-        {/* Activity */}
         {visiblePosts.length === 0 ? (
           <div className="empty-state profile-empty">
             <div className="empty-title">
@@ -1338,7 +1308,6 @@ export default function ProfilePage() {
         )}
       </section>
 
-      {/* Right sidebar */}
       <aside className="right-sidebar">
         <div className="side-card">
           <div className="side-card-title">
@@ -1395,7 +1364,6 @@ export default function ProfilePage() {
         </div>
       </aside>
 
-      {/* Edit profile panel */}
       {editingProfile && (
         <div
           className="edit-overlay"
@@ -1976,5 +1944,50 @@ export default function ProfilePage() {
         }
       `}</style>
     </SocialLayout>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense
+      fallback={
+        <SocialLayout
+          guestHandle={null}
+          active="profile"
+        >
+          <section className="feed">
+            <div className="feed-header">
+              <div>
+                <div className="header-title">
+                  Profile
+                </div>
+                <div className="header-subtitle">
+                  YourView
+                </div>
+              </div>
+            </div>
+
+            <div className="loading-state">
+              <div className="spinner" />
+              Loading profile...
+            </div>
+          </section>
+
+          <aside className="right-sidebar">
+            <div className="side-card">
+              <div className="side-card-title">
+                YourView
+              </div>
+
+              <div className="side-item">
+                Loading profile...
+              </div>
+            </div>
+          </aside>
+        </SocialLayout>
+      }
+    >
+      <ProfileContent />
+    </Suspense>
   );
 }

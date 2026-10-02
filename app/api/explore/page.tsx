@@ -1,4 +1,3 @@
-```tsx
 "use client";
 
 import {
@@ -121,11 +120,13 @@ export default function ExplorePage() {
     setError("");
 
     try {
+      const searchUrl =
+        "/api/explore/search?q=" +
+        encodeURIComponent(cleanQuery);
+
       const response =
         await fetch(
-          `/api/explore/search?q=${encodeURIComponent(
-            cleanQuery
-          )}`,
+          searchUrl,
           {
             method: "GET",
             cache: "no-store",

@@ -2,6 +2,7 @@
 
 import {
   FormEvent,
+  Suspense,
   useEffect,
   useRef,
   useState,
@@ -49,7 +50,7 @@ type Conversation = {
 };
 
 
-export default function MessagesPage() {
+function MessagesContent() {
   const router = useRouter();
 
   const searchParams =
@@ -1262,5 +1263,36 @@ export default function MessagesPage() {
         }
       `}</style>
     </SocialLayout>
+  );
+}
+
+
+export default function MessagesPage() {
+  return (
+    <Suspense
+      fallback={
+        <SocialLayout active="messages">
+          <section className="feed">
+            <header className="feed-header">
+              <div className="messages-title">
+                <strong>
+                  Messages
+                </strong>
+              </div>
+            </header>
+
+            <div className="loading-state">
+              <div className="spinner" />
+
+              <span>
+                Loading messages...
+              </span>
+            </div>
+          </section>
+        </SocialLayout>
+      }
+    >
+      <MessagesContent />
+    </Suspense>
   );
 }

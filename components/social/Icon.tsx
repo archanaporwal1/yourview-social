@@ -7,6 +7,7 @@ export type IconName =
   | "mail"
   | "bookmark"
   | "user"
+  | "profile"
   | "settings"
   | "reply"
   | "repost"
@@ -15,7 +16,12 @@ export type IconName =
   | "edit"
   | "more"
   | "logout"
-  | "close";
+  | "close"
+  | "explore"
+  | "message"
+  | "arrow-left"
+  | "location"
+  | "calendar";
 
 type IconProps = {
   name: IconName;
@@ -74,6 +80,13 @@ export default function Icon({
         </svg>
       );
 
+    case "message":
+      return (
+        <svg {...common}>
+          <path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H8l-4 3v-5.5a7.5 7.5 0 1 1 16-5Z" />
+        </svg>
+      );
+
     case "bookmark":
       return (
         <svg {...common}>
@@ -82,6 +95,7 @@ export default function Icon({
       );
 
     case "user":
+    case "profile":
       return (
         <svg {...common}>
           <circle cx="12" cy="8" r="4" />
@@ -93,7 +107,7 @@ export default function Icon({
       return (
         <svg {...common}>
           <circle cx="12" cy="12" r="3" />
-          <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.1h-2.6v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H6.4v-2.6h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5V4h2.6v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.1v2.6h-.1a1.7 1.7 0 0 0-1.5 1Z" />
+          <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.1h-2.6v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H6.4v-2.6h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5V4h2.6v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0-1.5 1h.1v2.6h-.1a1.7 1.7 0 0 0-1.5 1Z" />
         </svg>
       );
 
@@ -163,6 +177,40 @@ export default function Icon({
         <svg {...common}>
           <path d="m6 6 12 12" />
           <path d="m18 6-12 12" />
+        </svg>
+      );
+
+    case "explore":
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="9" />
+          <path d="m15.5 8.5-2 5-5 2 2-5Z" />
+        </svg>
+      );
+
+    case "arrow-left":
+      return (
+        <svg {...common}>
+          <path d="M19 12H5" />
+          <path d="m12 19-7-7 7-7" />
+        </svg>
+      );
+
+    case "location":
+      return (
+        <svg {...common}>
+          <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
+          <circle cx="12" cy="10" r="2.5" />
+        </svg>
+      );
+
+    case "calendar":
+      return (
+        <svg {...common}>
+          <rect x="3" y="4.5" width="18" height="16" rx="2" />
+          <path d="M8 2.5v4" />
+          <path d="M16 2.5v4" />
+          <path d="M3 9h18" />
         </svg>
       );
 

@@ -59,7 +59,8 @@ type PostCardProps = {
 
   onReply?: (
     event: FormEvent<HTMLFormElement>,
-    postId: string
+    postId: string,
+    body: string
   ) => void;
 
   onEdit?: (
@@ -207,7 +208,10 @@ export default function PostCard({
   ) {
     event.preventDefault();
 
-    if (!replyText.trim()) {
+    const trimmedReply =
+      replyText.trim();
+
+    if (!trimmedReply) {
       return;
     }
 
@@ -215,7 +219,11 @@ export default function PostCard({
       return;
     }
 
-    onReply(event, post.id);
+    onReply(
+      event,
+      post.id,
+      trimmedReply
+    );
 
     setReplyText("");
   }
@@ -322,7 +330,7 @@ export default function PostCard({
         )}
 
         {/* EXACT ORDER:
-            LIKE → REPLY → REPOST → BOOKMARK → EDIT
+            LIKE → REPLY → REPOST → BOOKMARK → EDIT → SHARE
         */}
         <div className="action-bar">
           {/* LIKE */}
@@ -499,9 +507,7 @@ export default function PostCard({
             }
           >
             <div className="avatar tiny">
-              {guestId
-                ? "Y"
-                : "Y"}
+              Y
             </div>
 
             <input
