@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 
 import SocialLayout from "@/components/social/SocialLayout";
@@ -13,6 +13,17 @@ type SettingsSection =
   | "notifications"
   | "appearance"
   | "security";
+
+type ProfileData = {
+  id?: string;
+  username?: string | null;
+  display_name?: string | null;
+  bio?: string | null;
+  city?: string | null;
+  country?: string | null;
+  date_of_birth?: string | null;
+  is_verified?: boolean | null;
+};
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] =
@@ -106,17 +117,11 @@ export default function SettingsPage() {
           </aside>
 
           <section className="settings-content">
-            {activeSection === "account" && (
-              <AccountSettings />
-            )}
+            {activeSection === "account" && <AccountSettings />}
 
-            {activeSection === "profile" && (
-              <ProfileSettings />
-            )}
+            {activeSection === "profile" && <ProfileSettings />}
 
-            {activeSection === "privacy" && (
-              <PrivacySettings />
-            )}
+            {activeSection === "privacy" && <PrivacySettings />}
 
             {activeSection === "notifications" && (
               <NotificationSettings />
@@ -126,9 +131,7 @@ export default function SettingsPage() {
               <AppearanceSettings />
             )}
 
-            {activeSection === "security" && (
-              <SecuritySettings />
-            )}
+            {activeSection === "security" && <SecuritySettings />}
           </section>
         </div>
       </main>
@@ -332,10 +335,177 @@ export default function SettingsPage() {
           font-size: 14px;
           font-weight: 700;
           cursor: pointer;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .setting-button:hover {
           background: #181818;
+        }
+
+        .profile-editor {
+          padding: 18px;
+        }
+
+        .profile-editor-field {
+          margin-bottom: 18px;
+        }
+
+        .profile-editor-field:last-of-type {
+          margin-bottom: 0;
+        }
+
+        .profile-editor-label {
+          display: block;
+          margin-bottom: 7px;
+          color: #e7e9ea;
+          font-size: 14px;
+          line-height: 20px;
+          font-weight: 700;
+        }
+
+        .profile-editor-input,
+        .profile-editor-textarea {
+          width: 100%;
+          box-sizing: border-box;
+          border: 1px solid #536471;
+          border-radius: 8px;
+          background: #000;
+          color: #fff;
+          font-family: inherit;
+          font-size: 15px;
+          outline: none;
+          transition:
+            border-color 0.15s ease,
+            background 0.15s ease;
+        }
+
+        .profile-editor-input {
+          height: 46px;
+          padding: 0 13px;
+        }
+
+        .profile-editor-textarea {
+          min-height: 100px;
+          padding: 12px 13px;
+          resize: vertical;
+          line-height: 20px;
+        }
+
+        .profile-editor-input:focus,
+        .profile-editor-textarea:focus {
+          border-color: #1d9bf0;
+          background: #050505;
+        }
+
+        .profile-editor-input::placeholder,
+        .profile-editor-textarea::placeholder {
+          color: #536471;
+        }
+
+        .profile-editor-counter {
+          margin-top: 5px;
+          color: #71767b;
+          font-size: 12px;
+          text-align: right;
+        }
+
+        .profile-editor-help {
+          margin-top: 6px;
+          color: #71767b;
+          font-size: 12px;
+          line-height: 17px;
+        }
+
+        .profile-editor-footer {
+          margin-top: 20px;
+          padding-top: 18px;
+          border-top: 1px solid #2f3336;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 15px;
+        }
+
+        .profile-editor-status {
+          min-width: 0;
+          font-size: 13px;
+          line-height: 18px;
+        }
+
+        .profile-editor-status.success {
+          color: #00ba7c;
+        }
+
+        .profile-editor-status.error {
+          color: #f4212e;
+        }
+
+        .save-profile-button {
+          min-height: 38px;
+          padding: 0 19px;
+          border: 0;
+          border-radius: 999px;
+          background: #1d9bf0;
+          color: #fff;
+          font-size: 14px;
+          font-weight: 800;
+          cursor: pointer;
+          white-space: nowrap;
+        }
+
+        .save-profile-button:hover {
+          background: #1a8cd8;
+        }
+
+        .save-profile-button:disabled {
+          opacity: 0.55;
+          cursor: default;
+        }
+
+        .profile-username {
+          margin-bottom: 20px;
+          padding: 13px 14px;
+          border-radius: 10px;
+          background: #16181c;
+        }
+
+        .profile-username-label {
+          color: #71767b;
+          font-size: 12px;
+          line-height: 17px;
+        }
+
+        .profile-username-value {
+          margin-top: 2px;
+          color: #fff;
+          font-size: 15px;
+          line-height: 20px;
+          font-weight: 700;
+        }
+
+        .verified-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 18px;
+          height: 18px;
+          margin-left: 5px;
+          border-radius: 50%;
+          background: #1d9bf0;
+          color: #fff;
+          font-size: 11px;
+          font-weight: 900;
+          vertical-align: -2px;
+        }
+
+        .profile-loading {
+          padding: 34px 20px;
+          text-align: center;
+          color: #71767b;
+          font-size: 14px;
         }
 
         .toggle {
@@ -477,6 +647,19 @@ export default function SettingsPage() {
             padding: 14px;
           }
 
+          .profile-editor {
+            padding: 14px;
+          }
+
+          .profile-editor-footer {
+            align-items: stretch;
+            flex-direction: column;
+          }
+
+          .save-profile-button {
+            width: 100%;
+          }
+
           .danger-row {
             align-items: flex-start;
             flex-direction: column;
@@ -541,66 +724,352 @@ function AccountSettings() {
 }
 
 function ProfileSettings() {
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+
+  const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
+  const [city, setCity] = useState("");
+  const [country, setCountry] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProfile() {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await fetch("/api/profile", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        const data = await response.json().catch(() => null);
+
+        if (!response.ok) {
+          throw new Error(
+            data?.error || "Unable to load your profile."
+          );
+        }
+
+        const loadedProfile: ProfileData =
+          data?.profile ?? data;
+
+        if (cancelled) return;
+
+        setProfile(loadedProfile);
+
+        setDisplayName(
+          loadedProfile.display_name ?? ""
+        );
+
+        setBio(loadedProfile.bio ?? "");
+
+        setCity(
+          loadedProfile.city ?? ""
+        );
+
+        setCountry(
+          loadedProfile.country ?? ""
+        );
+
+        setDateOfBirth(
+          loadedProfile.date_of_birth ?? ""
+        );
+      } catch (loadError) {
+        if (cancelled) return;
+
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "Unable to load your profile."
+        );
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadProfile();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function handleSave(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (saving) return;
+
+    setSaving(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          display_name: displayName,
+          bio,
+          city,
+          country,
+          date_of_birth: dateOfBirth || null,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error || "Unable to save your profile."
+        );
+      }
+
+      const updatedProfile: ProfileData =
+        data?.profile ?? data;
+
+      setProfile(updatedProfile);
+
+      setDisplayName(
+        updatedProfile.display_name ?? ""
+      );
+
+      setBio(
+        updatedProfile.bio ?? ""
+      );
+
+      setCity(
+        updatedProfile.city ?? ""
+      );
+
+      setCountry(
+        updatedProfile.country ?? ""
+      );
+
+      setDateOfBirth(
+        updatedProfile.date_of_birth ?? ""
+      );
+
+      setSuccess("Profile updated successfully.");
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Unable to save your profile."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <div className="settings-section">
       <h2>Profile</h2>
+
       <p className="settings-section-description">
         Manage the information shown on your YourView profile.
       </p>
 
-      <div className="settings-card">
-        <div className="setting-row">
-          <div className="setting-row-text">
-            <div className="setting-row-title">Name</div>
-            <div className="setting-row-description">
-              The name displayed on your profile.
-            </div>
+      {loading ? (
+        <div className="settings-card">
+          <div className="profile-loading">
+            Loading your profile...
           </div>
-
-          <Link href="/profile" className="setting-button">
-            Edit
-          </Link>
         </div>
-
-        <div className="setting-row">
-          <div className="setting-row-text">
-            <div className="setting-row-title">Bio</div>
-            <div className="setting-row-description">
-              Tell people a little about yourself.
+      ) : (
+        <>
+          {error && (
+            <div
+              className="info-box"
+              style={{
+                color: "#f4212e",
+                marginBottom: "18px",
+              }}
+            >
+              {error}
             </div>
-          </div>
+          )}
 
-          <Link href="/profile" className="setting-button">
-            Edit
-          </Link>
-        </div>
+          <form
+            className="settings-card"
+            onSubmit={handleSave}
+          >
+            <div className="profile-editor">
+              <div className="profile-username">
+                <div className="profile-username-label">
+                  Username
+                </div>
 
-        <div className="setting-row">
-          <div className="setting-row-text">
-            <div className="setting-row-title">Location</div>
-            <div className="setting-row-description">
-              City and country displayed on your profile.
+                <div className="profile-username-value">
+                  {profile?.username
+                    ? `@${profile.username}`
+                    : "Not available"}
+
+                  {profile?.is_verified && (
+                    <span
+                      className="verified-badge"
+                      title="Verified"
+                      aria-label="Verified"
+                    >
+                      ✓
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="profile-editor-field">
+                <label
+                  className="profile-editor-label"
+                  htmlFor="settings-display-name"
+                >
+                  Display name
+                </label>
+
+                <input
+                  id="settings-display-name"
+                  className="profile-editor-input"
+                  type="text"
+                  value={displayName}
+                  onChange={(event) =>
+                    setDisplayName(event.target.value)
+                  }
+                  maxLength={80}
+                  placeholder="Your name"
+                  autoComplete="name"
+                />
+
+                <div className="profile-editor-counter">
+                  {displayName.length}/80
+                </div>
+              </div>
+
+              <div className="profile-editor-field">
+                <label
+                  className="profile-editor-label"
+                  htmlFor="settings-bio"
+                >
+                  Bio
+                </label>
+
+                <textarea
+                  id="settings-bio"
+                  className="profile-editor-textarea"
+                  value={bio}
+                  onChange={(event) =>
+                    setBio(event.target.value)
+                  }
+                  maxLength={160}
+                  placeholder="Tell people a little about yourself"
+                />
+
+                <div className="profile-editor-counter">
+                  {bio.length}/160
+                </div>
+              </div>
+
+              <div className="profile-editor-field">
+                <label
+                  className="profile-editor-label"
+                  htmlFor="settings-city"
+                >
+                  City
+                </label>
+
+                <input
+                  id="settings-city"
+                  className="profile-editor-input"
+                  type="text"
+                  value={city}
+                  onChange={(event) =>
+                    setCity(event.target.value)
+                  }
+                  maxLength={100}
+                  placeholder="Your city"
+                  autoComplete="address-level2"
+                />
+              </div>
+
+              <div className="profile-editor-field">
+                <label
+                  className="profile-editor-label"
+                  htmlFor="settings-country"
+                >
+                  Country
+                </label>
+
+                <input
+                  id="settings-country"
+                  className="profile-editor-input"
+                  type="text"
+                  value={country}
+                  onChange={(event) =>
+                    setCountry(event.target.value)
+                  }
+                  maxLength={100}
+                  placeholder="Your country"
+                  autoComplete="country-name"
+                />
+              </div>
+
+              <div className="profile-editor-field">
+                <label
+                  className="profile-editor-label"
+                  htmlFor="settings-date-of-birth"
+                >
+                  Date of birth
+                </label>
+
+                <input
+                  id="settings-date-of-birth"
+                  className="profile-editor-input"
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={(event) =>
+                    setDateOfBirth(event.target.value)
+                  }
+                />
+
+                <div className="profile-editor-help">
+                  Your date of birth is stored in your profile.
+                </div>
+              </div>
+
+              <div className="profile-editor-footer">
+                <div
+                  className={`profile-editor-status ${
+                    success
+                      ? "success"
+                      : error
+                        ? "error"
+                        : ""
+                  }`}
+                >
+                  {success || error}
+                </div>
+
+                <button
+                  type="submit"
+                  className="save-profile-button"
+                  disabled={saving}
+                >
+                  {saving ? "Saving..." : "Save changes"}
+                </button>
+              </div>
             </div>
-          </div>
-
-          <Link href="/profile" className="setting-button">
-            Edit
-          </Link>
-        </div>
-
-        <div className="setting-row">
-          <div className="setting-row-text">
-            <div className="setting-row-title">Date of birth</div>
-            <div className="setting-row-description">
-              Control whether your birthday information is displayed.
-            </div>
-          </div>
-
-          <Link href="/profile" className="setting-button">
-            Edit
-          </Link>
-        </div>
-      </div>
+          </form>
+        </>
+      )}
     </div>
   );
 }
@@ -628,7 +1097,9 @@ function PrivacySettings() {
           <button
             type="button"
             className={`toggle ${privateAccount ? "on" : ""}`}
-            onClick={() => setPrivateAccount((value) => !value)}
+            onClick={() =>
+              setPrivateAccount((value) => !value)
+            }
             aria-label="Toggle private account"
             aria-pressed={privateAccount}
           >
@@ -649,7 +1120,9 @@ function PrivacySettings() {
           <button
             type="button"
             className={`toggle ${messageRequests ? "on" : ""}`}
-            onClick={() => setMessageRequests((value) => !value)}
+            onClick={() =>
+              setMessageRequests((value) => !value)
+            }
             aria-label="Toggle message requests"
             aria-pressed={messageRequests}
           >
@@ -659,13 +1132,18 @@ function PrivacySettings() {
 
         <div className="setting-row">
           <div className="setting-row-text">
-            <div className="setting-row-title">Blocked accounts</div>
+            <div className="setting-row-title">
+              Blocked accounts
+            </div>
             <div className="setting-row-description">
               Manage accounts that you have blocked.
             </div>
           </div>
 
-          <button type="button" className="setting-button">
+          <button
+            type="button"
+            className="setting-button"
+          >
             Manage
           </button>
         </div>
@@ -725,7 +1203,10 @@ function NotificationSettings() {
         {rows.map((row) => (
           <div className="setting-row" key={row.title}>
             <div className="setting-row-text">
-              <div className="setting-row-title">{row.title}</div>
+              <div className="setting-row-title">
+                {row.title}
+              </div>
+
               <div className="setting-row-description">
                 {row.description}
               </div>
@@ -733,8 +1214,12 @@ function NotificationSettings() {
 
             <button
               type="button"
-              className={`toggle ${row.value ? "on" : ""}`}
-              onClick={() => row.setValue(!row.value)}
+              className={`toggle ${
+                row.value ? "on" : ""
+              }`}
+              onClick={() =>
+                row.setValue(!row.value)
+              }
               aria-label={`Toggle ${row.title}`}
               aria-pressed={row.value}
             >
@@ -760,7 +1245,10 @@ function AppearanceSettings() {
       <div className="settings-card">
         <div className="setting-row">
           <div className="setting-row-text">
-            <div className="setting-row-title">Dark mode</div>
+            <div className="setting-row-title">
+              Dark mode
+            </div>
+
             <div className="setting-row-description">
               Use the dark YourView interface.
             </div>
@@ -768,8 +1256,12 @@ function AppearanceSettings() {
 
           <button
             type="button"
-            className={`toggle ${darkMode ? "on" : ""}`}
-            onClick={() => setDarkMode((value) => !value)}
+            className={`toggle ${
+              darkMode ? "on" : ""
+            }`}
+            onClick={() =>
+              setDarkMode((value) => !value)
+            }
             aria-label="Toggle dark mode"
             aria-pressed={darkMode}
           >
@@ -779,13 +1271,18 @@ function AppearanceSettings() {
 
         <div className="setting-row">
           <div className="setting-row-text">
-            <div className="setting-row-title">Display language</div>
+            <div className="setting-row-title">
+              Display language
+            </div>
+
             <div className="setting-row-description">
               Language used throughout YourView.
             </div>
           </div>
 
-          <span className="setting-value">English</span>
+          <span className="setting-value">
+            English
+          </span>
         </div>
       </div>
 
@@ -808,43 +1305,61 @@ function SecuritySettings() {
       <div className="settings-card">
         <div className="setting-row">
           <div className="setting-row-text">
-            <div className="setting-row-title">Active sessions</div>
+            <div className="setting-row-title">
+              Active sessions
+            </div>
+
             <div className="setting-row-description">
               Review devices currently signed in to your account.
             </div>
           </div>
 
-          <button type="button" className="setting-button">
+          <button
+            type="button"
+            className="setting-button"
+          >
             Manage
           </button>
         </div>
 
         <div className="setting-row">
           <div className="setting-row-text">
-            <div className="setting-row-title">Log out</div>
+            <div className="setting-row-title">
+              Log out
+            </div>
+
             <div className="setting-row-description">
               Sign out of your current YourView session.
             </div>
           </div>
 
-          <Link href="/auth/logout" className="setting-button">
+          <Link
+            href="/auth/logout"
+            className="setting-button"
+          >
             Log out
           </Link>
         </div>
       </div>
 
       <div className="danger-card">
-        <div className="danger-title">Danger zone</div>
+        <div className="danger-title">
+          Danger zone
+        </div>
 
         <div className="danger-row">
           <div>
             <strong>Delete account</strong>
+
             <p>
               Permanently delete your YourView account and associated data.
             </p>
           </div>
 
-          <button type="button" className="danger-button">
+          <button
+            type="button"
+            className="danger-button"
+          >
             Delete account
           </button>
         </div>

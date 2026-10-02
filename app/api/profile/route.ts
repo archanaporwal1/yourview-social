@@ -35,18 +35,14 @@ function emptyPost(
     id: post.id,
     body: post.body,
     media_url: post.media_url ?? null,
-    guest_handle:
-      post.guest_handle ?? null,
+    guest_handle: post.guest_handle ?? null,
     guest_id: post.guest_id ?? null,
     user_id: post.user_id ?? null,
     created_at: post.created_at,
     updated_at: post.updated_at,
-    like_count:
-      counts?.like_count ?? 0,
-    repost_count:
-      counts?.repost_count ?? 0,
-    bookmark_count:
-      counts?.bookmark_count ?? 0,
+    like_count: counts?.like_count ?? 0,
+    repost_count: counts?.repost_count ?? 0,
+    bookmark_count: counts?.bookmark_count ?? 0,
     liked: false,
     reposted: false,
     bookmarked: false,
@@ -65,9 +61,7 @@ async function enrichPosts(
     return [];
   }
 
-  const postIds = posts.map(
-    (post) => post.id
-  );
+  const postIds = posts.map((post) => post.id);
 
   const [
     likesResult,
@@ -77,23 +71,17 @@ async function enrichPosts(
   ] = await Promise.all([
     supabase
       .from("likes")
-      .select(
-        "post_id,user_id,guest_id"
-      )
+      .select("post_id,user_id,guest_id")
       .in("post_id", postIds),
 
     supabase
       .from("reposts")
-      .select(
-        "post_id,user_id,guest_id"
-      )
+      .select("post_id,user_id,guest_id")
       .in("post_id", postIds),
 
     supabase
       .from("bookmarks")
-      .select(
-        "post_id,user_id,guest_id"
-      )
+      .select("post_id,user_id,guest_id")
       .in("post_id", postIds),
 
     supabase
@@ -107,124 +95,497 @@ async function enrichPosts(
       }),
   ]);
 
-  const likes =
-    likesResult.data || [];
-
-  const reposts =
-    repostsResult.data || [];
-
-  const bookmarks =
-    bookmarksResult.data || [];
-
-  const replies =
-    repliesResult.data || [];
+  const likes = likesResult.data || [];
+  const reposts = repostsResult.data || [];
+  const bookmarks = bookmarksResult.data || [];
+  const replies = repliesResult.data || [];
 
   return posts.map((post) => {
-    const postLikes =
-      likes.filter(
-        (item: any) =>
-          item.post_id === post.id
-      );
+    const postLikes = likes.filter(
+      (item: any) => item.post_id === post.id
+    );
 
-    const postReposts =
-      reposts.filter(
-        (item: any) =>
-          item.post_id === post.id
-      );
+    const postReposts = reposts.filter(
+      (item: any) => item.post_id === post.id
+    );
 
-    const postBookmarks =
-      bookmarks.filter(
-        (item: any) =>
-          item.post_id === post.id
-      );
+    const postBookmarks = bookmarks.filter(
+      (item: any) => item.post_id === post.id
+    );
 
-    const postReplies =
-      replies.filter(
-        (item: any) =>
-          item.post_id === post.id
-      );
+    const postReplies = replies.filter(
+      (item: any) => item.post_id === post.id
+    );
 
-    const liked =
-      viewerUserId
-        ? postLikes.some(
-            (item: any) =>
-              item.user_id ===
-              viewerUserId
-          )
-        : viewerGuestId
-        ? postLikes.some(
-            (item: any) =>
-              item.guest_id ===
-              viewerGuestId
-          )
-        : false;
+    const liked = viewerUserId
+      ? postLikes.some(
+          (item: any) =>
+            item.user_id === viewerUserId
+        )
+      : viewerGuestId
+      ? postLikes.some(
+          (item: any) =>
+            item.guest_id === viewerGuestId
+        )
+      : false;
 
-    const reposted =
-      viewerUserId
-        ? postReposts.some(
-            (item: any) =>
-              item.user_id ===
-              viewerUserId
-          )
-        : viewerGuestId
-        ? postReposts.some(
-            (item: any) =>
-              item.guest_id ===
-              viewerGuestId
-          )
-        : false;
+    const reposted = viewerUserId
+      ? postReposts.some(
+          (item: any) =>
+            item.user_id === viewerUserId
+        )
+      : viewerGuestId
+      ? postReposts.some(
+          (item: any) =>
+            item.guest_id === viewerGuestId
+        )
+      : false;
 
-    const bookmarked =
-      viewerUserId
-        ? postBookmarks.some(
-            (item: any) =>
-              item.user_id ===
-              viewerUserId
-          )
-        : viewerGuestId
-        ? postBookmarks.some(
-            (item: any) =>
-              item.guest_id ===
-              viewerGuestId
-          )
-        : false;
+    const bookmarked = viewerUserId
+      ? postBookmarks.some(
+          (item: any) =>
+            item.user_id === viewerUserId
+        )
+      : viewerGuestId
+      ? postBookmarks.some(
+          (item: any) =>
+            item.guest_id === viewerGuestId
+        )
+      : false;
 
     return {
       ...emptyPost(post, {
-        like_count:
-          postLikes.length,
-        repost_count:
-          postReposts.length,
-        bookmark_count:
-          postBookmarks.length,
+        like_count: postLikes.length,
+        repost_count: postReposts.length,
+        bookmark_count: postBookmarks.length,
       }),
 
       liked,
       reposted,
       bookmarked,
       replies: postReplies,
-      reply_count:
-        postReplies.length,
+      reply_count: postReplies.length,
     };
   });
+}
+
+/*
+ * ============================================================
+ * UPDATE REGISTERED USER PROFILE
+ * ============================================================
+ *
+ * PATCH /api/profile
+ *
+ * Editable fields:
+ * - display_name
+ * - bio
+ * - city
+ * - country
+ * - date_of_birth
+ *
+ * username and is_verified are intentionally NOT editable here.
+ *
+ * Guest profiles are also not modified by this endpoint.
+ */
+
+export async function PATCH(request: Request) {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError) {
+      console.error(
+        "Profile update auth error:",
+        authError
+      );
+
+      return NextResponse.json(
+        {
+          error: "Unable to verify your account.",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          error:
+            "You must be signed in to update your profile.",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
+
+    let body: any;
+
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        {
+          error: "Invalid request body.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    if (
+      body === null ||
+      typeof body !== "object" ||
+      Array.isArray(body)
+    ) {
+      return NextResponse.json(
+        {
+          error: "Invalid profile data.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const allowedFields = [
+      "display_name",
+      "bio",
+      "city",
+      "country",
+      "date_of_birth",
+    ] as const;
+
+    const updateData: Record<string, string | null> = {};
+
+    /*
+     * Only fields explicitly supplied by the client are changed.
+     * This prevents Settings from accidentally clearing other fields.
+     */
+
+    if ("display_name" in body) {
+      if (
+        body.display_name !== null &&
+        typeof body.display_name !== "string"
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Display name must be text.",
+          },
+          {
+            status: 400,
+          }
+        );
+      }
+
+      const displayName =
+        typeof body.display_name === "string"
+          ? body.display_name.trim()
+          : "";
+
+      if (displayName.length > 80) {
+        return NextResponse.json(
+          {
+            error:
+              "Display name cannot exceed 80 characters.",
+          },
+          {
+            status: 400,
+          }
+        );
+      }
+
+      updateData.display_name =
+        displayName || null;
+    }
+
+    if ("bio" in body) {
+      if (
+        body.bio !== null &&
+        typeof body.bio !== "string"
+      ) {
+        return NextResponse.json(
+          {
+            error: "Bio must be text.",
+          },
+          {
+            status: 400,
+          }
+        );
+      }
+
+      const bio =
+        typeof body.bio === "string"
+          ? body.bio.trim()
+          : "";
+
+      if (bio.length > 160) {
+        return NextResponse.json(
+          {
+            error:
+              "Bio cannot exceed 160 characters.",
+          },
+          {
+            status: 400,
+          }
+        );
+      }
+
+      updateData.bio = bio || null;
+    }
+
+    if ("city" in body) {
+      if (
+        body.city !== null &&
+        typeof body.city !== "string"
+      ) {
+        return NextResponse.json(
+          {
+            error: "City must be text.",
+          },
+          {
+            status: 400,
+          }
+        );
+      }
+
+      const city =
+        typeof body.city === "string"
+          ? body.city.trim()
+          : "";
+
+      if (city.length > 100) {
+        return NextResponse.json(
+          {
+            error:
+              "City cannot exceed 100 characters.",
+          },
+          {
+            status: 400,
+          }
+        );
+      }
+
+      updateData.city = city || null;
+    }
+
+    if ("country" in body) {
+      if (
+        body.country !== null &&
+        typeof body.country !== "string"
+      ) {
+        return NextResponse.json(
+          {
+            error: "Country must be text.",
+          },
+          {
+            status: 400,
+          }
+        );
+      }
+
+      const country =
+        typeof body.country === "string"
+          ? body.country.trim()
+          : "";
+
+      if (country.length > 100) {
+        return NextResponse.json(
+          {
+            error:
+              "Country cannot exceed 100 characters.",
+          },
+          {
+            status: 400,
+          }
+        );
+      }
+
+      updateData.country =
+        country || null;
+    }
+
+    if ("date_of_birth" in body) {
+      if (
+        body.date_of_birth !== null &&
+        typeof body.date_of_birth !== "string"
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Date of birth must be a valid date.",
+          },
+          {
+            status: 400,
+          }
+        );
+      }
+
+      const dateOfBirth =
+        typeof body.date_of_birth === "string"
+          ? body.date_of_birth.trim()
+          : "";
+
+      if (dateOfBirth) {
+        const validDate =
+          /^\d{4}-\d{2}-\d{2}$/.test(
+            dateOfBirth
+          );
+
+        if (!validDate) {
+          return NextResponse.json(
+            {
+              error:
+                "Date of birth must use YYYY-MM-DD format.",
+            },
+            {
+              status: 400,
+            }
+          );
+        }
+
+        const parsedDate = new Date(
+          `${dateOfBirth}T00:00:00Z`
+        );
+
+        if (
+          Number.isNaN(
+            parsedDate.getTime()
+          )
+        ) {
+          return NextResponse.json(
+            {
+              error:
+                "Date of birth is not valid.",
+            },
+            {
+              status: 400,
+            }
+          );
+        }
+      }
+
+      updateData.date_of_birth =
+        dateOfBirth || null;
+    }
+
+    if (
+      Object.keys(updateData).length === 0
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "No profile changes were provided.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    /*
+     * Explicitly update only the authenticated
+     * user's own profile.
+     *
+     * is_verified and username are deliberately
+     * excluded from updateData.
+     */
+
+    const {
+      data: updatedProfile,
+      error: updateError,
+    } = await supabase
+      .from("profiles")
+      .update(updateData)
+      .eq("id", user.id)
+      .select(
+        "id,username,display_name,bio,city,country,date_of_birth,is_verified,created_at"
+      )
+      .single();
+
+    if (updateError) {
+      console.error(
+        "Profile update error:",
+        updateError
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            updateError.message ||
+            "Unable to update your profile.",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      profile: {
+        id: updatedProfile.id,
+        username:
+          updatedProfile.username || "",
+        display_name:
+          updatedProfile.display_name ||
+          updatedProfile.username ||
+          "User",
+        bio:
+          updatedProfile.bio || "",
+        city:
+          updatedProfile.city || "",
+        country:
+          updatedProfile.country || "",
+        date_of_birth:
+          updatedProfile.date_of_birth ||
+          null,
+        is_verified:
+          updatedProfile.is_verified !==
+          false,
+        created_at:
+          updatedProfile.created_at,
+      },
+    });
+  } catch (error) {
+    console.error(
+      "Profile PATCH API error:",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to update profile.",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
 }
 
 export async function GET(
   request: Request
 ) {
   try {
-    const url =
-      new URL(request.url);
+    const url = new URL(request.url);
 
     const requestedGuestId =
-      url.searchParams.get(
-        "guest"
-      );
+      url.searchParams.get("guest");
 
     const requestedUserId =
-      url.searchParams.get(
-        "user"
-      );
+      url.searchParams.get("user");
 
     const guestHeader =
       request.headers.get(
